@@ -76,30 +76,30 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
-        //Xác thực yêu cầu
-        $this->validator($request->all())->validate();
+            //Validate the incoming request using the already included validator method
+            $this->validator($request->all())->validate();
 
-        // Khởi tạo lớp 2FA
-        $google2fa = app('pragmarx.google2fa');
+            // Initialise the 2FA class
+            $google2fa = app('pragmarx.google2fa');
 
-        // Lưu dữ liệu đăng ký trong một mảng
-        $registrationData = $request->all();
+            // Save the registration data in an array
+            $registrationData = $request->all();
 
-        // Thêm Key vào dữ liệu đăng ký
-        $registrationData['google2fa_secret'] = $google2fa->generateSecretKey();
+            // Add the secret key to the registration data
+            $registrationData['google2fa_secret'] = $google2fa->generateSecretKey();
 
-        // Lưu dữ liệu đăng ký vào phiên người dùng cho yêu cầu tiếp theo
-        $request->session()->flash('registration_data', $registrationData);
+            // Save the registration data to the user session for just the next request
+            $request->session()->flash('registration_data', $registrationData);
 
-        // Tạo hình ảnh QR. Đây là hình ảnh người dùng sẽ quét bằng ứng dụng của họ
-         // để thiết lập xác thực hai yếu tố
-        $qrImage = $google2fa->getQRCodeInline(
-            config('app.name'),
-            $registrationData['email'],
-            $registrationData['google2fa_secret']
-        );
+            // Generate the QR image. This is the image the user will scan with their app
+            // to set up two factor authentication
+            $qrImage = $google2fa->getQRCodeInline(
+                config('app.name'),
+                $registrationData['email'],
+                $registrationData['google2fa_secret']
+            );
 
-        // Hình ảnh mã vạch QR
+        // Pass the QR barcode image to our view
         return view('google2fa.register', ['qrImage' => $qrImage, 'secret' => $registrationData['google2fa_secret']]);
     }
 
